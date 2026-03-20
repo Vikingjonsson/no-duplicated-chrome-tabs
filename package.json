@@ -1,6 +1,6 @@
 {
   "name": "no-duplicate-chrome-tabs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chrome extension to prevent duplicate tabs by focusing existing tabs",
   "main": "dist/background.js",
   "scripts": {
@@ -10,8 +10,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --coverage --watchAll=false",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
     "format": "prettier --write 'src/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts'",
     "type-check": "tsc --noEmit",
@@ -49,10 +49,6 @@
   },
   "lint-staged": {
     "src/**/*.{ts,js}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "test/**/*.{ts,js}": [
       "eslint --fix",
       "prettier --write"
     ],

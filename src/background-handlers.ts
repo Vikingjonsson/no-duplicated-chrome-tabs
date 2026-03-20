@@ -1,12 +1,10 @@
 const IGNORED_URLS = ['chrome://', 'chrome-extension://', 'about:blank'];
 
-const isValidUrl = (url: string | undefined): url is string => {
-  if (!url || typeof url !== 'string') return false;
-  return !IGNORED_URLS.some((ignored) => url.startsWith(ignored));
+const isIgnoredUrl = (url: string): boolean => {
+  return IGNORED_URLS.some((ignored) => url.startsWith(ignored));
 };
 
-const normalizeUrl = (url: string): string | null => {
-  if (!url) return null;
+const normalizeUrl = (url: string): string => {
   try {
     const urlObj = new URL(url);
     urlObj.hash = '';
@@ -20,10 +18,7 @@ const findDuplicateTab = async (
   targetUrl: string,
   excludeTabId: number
 ): Promise<chrome.tabs.Tab | null> => {
-  if (!isValidUrl(targetUrl)) return null;
-
   const normalizedTarget = normalizeUrl(targetUrl);
-  if (!normalizedTarget) return null;
 
   try {
     const tabs = await chrome.tabs.query({});
@@ -50,12 +45,12 @@ const focusAndRemove = async (
     }
     await chrome.tabs.remove(duplicateTabId);
   } catch {
-    // Silently handle errors
+    // Tab or window may have been closed between query and update
   }
 };
 
 const handleTab = async (url: string, tabId: number): Promise<void> => {
-  if (!isValidUrl(url) || !tabId) return;
+  if (isIgnoredUrl(url)) return;
 
   const duplicate = await findDuplicateTab(url, tabId);
   if (duplicate) {

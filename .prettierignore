@@ -3,6 +3,3 @@ coverage/
 dist/
 *.log
 .DS_Store
-background.js
-background.test.js
-test/setup.js
