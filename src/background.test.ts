@@ -17,11 +17,6 @@ const mockChrome = {
 
 describe('Chrome Extension - No Duplicate Tabs', () => {
   it('should handle duplicate tab when new tab is created', async () => {
-    mockChrome.tabs.query.mockClear();
-    mockChrome.tabs.update.mockClear();
-    mockChrome.tabs.remove.mockClear();
-    mockChrome.windows.update.mockClear();
-
     const { handleTabCreated } = await import('./background-handlers');
 
     const existingTab = { id: 1, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
@@ -42,11 +37,6 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
   });
 
   it('should ignore chrome:// URLs when new tab is created', async () => {
-    mockChrome.tabs.query.mockClear();
-    mockChrome.tabs.update.mockClear();
-    mockChrome.tabs.remove.mockClear();
-    mockChrome.windows.update.mockClear();
-
     const { handleTabCreated } = await import('./background-handlers');
 
     const newTab = { id: 1, url: 'chrome://newtab/' } as chrome.tabs.Tab;
@@ -57,11 +47,6 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
   });
 
   it('should handle URL updates during loading', async () => {
-    mockChrome.tabs.query.mockClear();
-    mockChrome.tabs.update.mockClear();
-    mockChrome.tabs.remove.mockClear();
-    mockChrome.windows.update.mockClear();
-
     const { handleTabUpdated } = await import('./background-handlers');
 
     const existingTab = { id: 1, url: 'https://example.com' } as chrome.tabs.Tab;
@@ -78,11 +63,6 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
   });
 
   it('should ignore URL updates when not loading', async () => {
-    mockChrome.tabs.query.mockClear();
-    mockChrome.tabs.update.mockClear();
-    mockChrome.tabs.remove.mockClear();
-    mockChrome.windows.update.mockClear();
-
     const { handleTabUpdated } = await import('./background-handlers');
 
     await handleTabUpdated(1, { url: 'https://example.com', status: 'complete' });
@@ -91,11 +71,6 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
   });
 
   it('should ignore chrome-extension:// URLs', async () => {
-    mockChrome.tabs.query.mockClear();
-    mockChrome.tabs.update.mockClear();
-    mockChrome.tabs.remove.mockClear();
-    mockChrome.windows.update.mockClear();
-
     const { handleTabCreated } = await import('./background-handlers');
 
     const newTab = { id: 1, url: 'chrome-extension://example' } as chrome.tabs.Tab;
@@ -106,11 +81,6 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
   });
 
   it('should ignore about:blank URLs', async () => {
-    mockChrome.tabs.query.mockClear();
-    mockChrome.tabs.update.mockClear();
-    mockChrome.tabs.remove.mockClear();
-    mockChrome.windows.update.mockClear();
-
     const { handleTabCreated } = await import('./background-handlers');
 
     const newTab = { id: 1, url: 'about:blank' } as chrome.tabs.Tab;
