@@ -4,7 +4,7 @@
   "version": "1.0.1",
   "description": "Automatically prevents duplicate tabs by focusing existing tabs with the same URL instead of creating new ones.",
   "author": "Viking Jonsson",
-  "homepage_url": "https://github.com/Vikingjonsson/noDuplicatedChromeTabs",
+  "homepage_url": "https://github.com/Vikingjonsson/no-duplicated-chrome-tabs",
   "permissions": ["tabs"],
   "background": {
     "service_worker": "background.js"
