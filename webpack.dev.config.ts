@@ -1,7 +1,8 @@
-const path = require('path');
+import path from 'path';
+import { Configuration } from 'webpack';
 
-module.exports = {
-  mode: 'production',
+const config: Configuration = {
+  mode: 'development',
   entry: './src/background.ts',
   output: {
     filename: 'background.js',
@@ -20,8 +21,8 @@ module.exports = {
       },
     ],
   },
-  target: 'webworker', // Chrome extension service worker
-  optimization: {
-    minimize: true, // Enable minification for production
-  },
+  target: 'webworker',
+  devtool: 'source-map',
 };
+
+export default config;

@@ -1,4 +1,6 @@
-module.exports = {
+import type { Config } from 'jest';
+
+const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   testMatch: ['**/*.test.ts'],
@@ -6,3 +8,5 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js'],
   clearMocks: true,
 };
+
+export default config;

@@ -4,9 +4,9 @@
   "description": "Chrome extension to prevent duplicate tabs by focusing existing tabs",
   "main": "dist/background.js",
   "scripts": {
-    "build": "webpack --config webpack.dev.config.js && cp manifest.json dist/",
-    "build:prod": "webpack --config webpack.config.js && cp manifest.json dist/ && cp -r icons dist/ 2>/dev/null || true",
-    "build:watch": "webpack --config webpack.dev.config.js --watch",
+    "build": "TS_NODE_PROJECT=tsconfig.node.json webpack --config webpack.dev.config.ts && cp manifest.json dist/",
+    "build:prod": "TS_NODE_PROJECT=tsconfig.node.json webpack --config webpack.config.ts && cp manifest.json dist/ && cp -r icons dist/ 2>/dev/null || true",
+    "build:watch": "TS_NODE_PROJECT=tsconfig.node.json webpack --config webpack.dev.config.ts --watch",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --coverage --watchAll=false",
@@ -43,6 +43,7 @@
     "prettier": "^3.2.5",
     "ts-jest": "^29.4.0",
     "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "webpack": "^5.99.9",
     "webpack-cli": "^6.0.1"

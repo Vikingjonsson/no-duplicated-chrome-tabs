@@ -1,7 +1,8 @@
-const path = require('path');
+import path from 'path';
+import { Configuration } from 'webpack';
 
-module.exports = {
-  mode: 'development',
+const config: Configuration = {
+  mode: 'production',
   entry: './src/background.ts',
   output: {
     filename: 'background.js',
@@ -21,5 +22,9 @@ module.exports = {
     ],
   },
   target: 'webworker',
-  devtool: 'source-map',
+  optimization: {
+    minimize: true,
+  },
 };
+
+export default config;
