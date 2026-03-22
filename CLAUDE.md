@@ -28,7 +28,9 @@ Key behavior flow: `handleTabCreated` / `handleTabUpdated` → `handleTab` → `
 
 Tests are co-located (`src/background.test.ts`) and mock the `chrome` global API.
 
-## Build Output
+## Build Setup
+
+All config files (webpack, jest) are TypeScript. Webpack configs use `tsconfig.node.json` (CommonJS + node types) via `TS_NODE_PROJECT` env var, separate from the source `tsconfig.json` (ES2022 modules).
 
 Webpack outputs to `dist/`. The manifest references `background.js` directly (no subdirectory). The build copies `manifest.json` and icons into `dist/` so the entire `dist/` folder can be loaded as an unpacked extension.
 
