@@ -1,6 +1,6 @@
 {
   "name": "no-duplicate-chrome-tabs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Chrome extension to prevent duplicate tabs by focusing existing tabs",
   "main": "dist/background.js",
   "scripts": {
