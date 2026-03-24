@@ -5,6 +5,7 @@ const mockChrome = {
     query: jest.fn<() => Promise<chrome.tabs.Tab[]>>(),
     update: jest.fn<() => Promise<chrome.tabs.Tab>>(),
     remove: jest.fn<() => Promise<void>>(),
+    get: jest.fn<() => Promise<chrome.tabs.Tab>>(),
     onCreated: { addListener: jest.fn() },
     onUpdated: { addListener: jest.fn() },
   },
@@ -18,9 +19,9 @@ const mockChrome = {
 import { handleTabCreated, handleTabUpdated } from './background-handlers';
 
 describe('Chrome Extension - No Duplicate Tabs', () => {
-  it('should handle duplicate tab when new tab is created', async () => {
+  it('should handle duplicate tab when new tab is created in same window', async () => {
     const existingTab = { id: 1, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
-    const newTab = { id: 2, url: 'https://example.com' } as chrome.tabs.Tab;
+    const newTab = { id: 2, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
 
     mockChrome.tabs.query.mockResolvedValue([existingTab]);
     mockChrome.tabs.update.mockResolvedValue({} as chrome.tabs.Tab);
@@ -29,9 +30,21 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
 
     await handleTabCreated(newTab);
 
+    expect(mockChrome.tabs.query).toHaveBeenCalledWith({ windowId: 1 });
     expect(mockChrome.tabs.update).toHaveBeenCalledWith(1, { active: true });
     expect(mockChrome.windows.update).toHaveBeenCalledWith(1, { focused: true });
     expect(mockChrome.tabs.remove).toHaveBeenCalledWith(2);
+  });
+
+  it('should allow same URL in different windows', async () => {
+    const newTab = { id: 2, url: 'https://example.com', windowId: 2 } as chrome.tabs.Tab;
+
+    mockChrome.tabs.query.mockResolvedValue([]);
+
+    await handleTabCreated(newTab);
+
+    expect(mockChrome.tabs.query).toHaveBeenCalledWith({ windowId: 2 });
+    expect(mockChrome.tabs.remove).not.toHaveBeenCalled();
   });
 
   it('should ignore chrome:// URLs when new tab is created', async () => {
@@ -43,14 +56,18 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
   });
 
   it('should handle URL updates during loading', async () => {
-    const existingTab = { id: 1, url: 'https://example.com' } as chrome.tabs.Tab;
+    const existingTab = { id: 1, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
+    const updatedTab = { id: 2, windowId: 1 } as chrome.tabs.Tab;
 
+    mockChrome.tabs.get.mockResolvedValue(updatedTab);
     mockChrome.tabs.query.mockResolvedValue([existingTab]);
     mockChrome.tabs.update.mockResolvedValue({} as chrome.tabs.Tab);
     mockChrome.tabs.remove.mockResolvedValue(undefined);
 
     await handleTabUpdated(2, { url: 'https://example.com', status: 'loading' });
 
+    expect(mockChrome.tabs.get).toHaveBeenCalledWith(2);
+    expect(mockChrome.tabs.query).toHaveBeenCalledWith({ windowId: 1 });
     expect(mockChrome.tabs.remove).toHaveBeenCalledWith(2);
   });
 

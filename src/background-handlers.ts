@@ -16,12 +16,13 @@ const normalizeUrl = (url: string): string => {
 
 const findDuplicateTab = async (
   targetUrl: string,
-  excludeTabId: number
+  excludeTabId: number,
+  windowId: number
 ): Promise<chrome.tabs.Tab | null> => {
   const normalizedTarget = normalizeUrl(targetUrl);
 
   try {
-    const tabs = await chrome.tabs.query({});
+    const tabs = await chrome.tabs.query({ windowId });
     return (
       tabs.find(
         (tab) => tab.id !== excludeTabId && tab.url && normalizeUrl(tab.url) === normalizedTarget
@@ -49,28 +50,32 @@ const focusAndRemove = async (
   }
 };
 
-const handleTab = async (url: string, tabId: number): Promise<void> => {
+const handleTab = async (url: string, tabId: number, windowId: number): Promise<void> => {
   if (isIgnoredUrl(url)) return;
 
-  const duplicate = await findDuplicateTab(url, tabId);
+  const duplicate = await findDuplicateTab(url, tabId, windowId);
   if (duplicate) {
     await focusAndRemove(duplicate, tabId);
   }
 };
 
 export const handleTabCreated = (tab: chrome.tabs.Tab): Promise<void> => {
-  if (tab.url && tab.id) {
-    return handleTab(tab.url, tab.id);
+  if (tab.url && tab.id && tab.windowId) {
+    return handleTab(tab.url, tab.id, tab.windowId);
   }
   return Promise.resolve();
 };
 
-export const handleTabUpdated = (
+export const handleTabUpdated = async (
   tabId: number,
   changeInfo: chrome.tabs.TabChangeInfo
 ): Promise<void> => {
   if (changeInfo.url && changeInfo.status === 'loading') {
-    return handleTab(changeInfo.url, tabId);
+    try {
+      const tab = await chrome.tabs.get(tabId);
+      return handleTab(changeInfo.url, tabId, tab.windowId);
+    } catch {
+      // Tab may have been closed
+    }
   }
-  return Promise.resolve();
 };
