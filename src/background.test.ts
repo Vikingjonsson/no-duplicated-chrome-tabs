@@ -8,6 +8,7 @@ const mockChrome = {
     get: jest.fn<() => Promise<chrome.tabs.Tab>>(),
     onCreated: { addListener: jest.fn() },
     onUpdated: { addListener: jest.fn() },
+    onAttached: { addListener: jest.fn() },
   },
   windows: {
     update: jest.fn<() => Promise<chrome.windows.Window>>(),
@@ -16,7 +17,7 @@ const mockChrome = {
 
 (globalThis as any).chrome = mockChrome;
 
-import { handleTabCreated, handleTabUpdated } from './background-handlers';
+import { handleTabAttached, handleTabCreated, handleTabUpdated } from './background-handlers';
 
 describe('Chrome Extension - No Duplicate Tabs', () => {
   it('should handle duplicate tab when new tab is created in same window', async () => {
@@ -91,5 +92,35 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
     await handleTabCreated(newTab);
 
     expect(mockChrome.tabs.query).not.toHaveBeenCalled();
+  });
+
+  it('should remove duplicate when tab is moved to a window with same URL', async () => {
+    const movedTab = { id: 3, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
+    const existingTab = { id: 1, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
+
+    mockChrome.tabs.get.mockResolvedValue(movedTab);
+    mockChrome.tabs.query.mockResolvedValue([existingTab]);
+    mockChrome.tabs.update.mockResolvedValue({} as chrome.tabs.Tab);
+    mockChrome.windows.update.mockResolvedValue({} as chrome.windows.Window);
+    mockChrome.tabs.remove.mockResolvedValue(undefined);
+
+    await handleTabAttached(3, { newWindowId: 1, newPosition: 0 });
+
+    expect(mockChrome.tabs.get).toHaveBeenCalledWith(3);
+    expect(mockChrome.tabs.query).toHaveBeenCalledWith({ windowId: 1 });
+    expect(mockChrome.tabs.update).toHaveBeenCalledWith(1, { active: true });
+    expect(mockChrome.tabs.remove).toHaveBeenCalledWith(3);
+  });
+
+  it('should keep tab when moved to a window without same URL', async () => {
+    const movedTab = { id: 3, url: 'https://example.com', windowId: 2 } as chrome.tabs.Tab;
+
+    mockChrome.tabs.get.mockResolvedValue(movedTab);
+    mockChrome.tabs.query.mockResolvedValue([]);
+
+    await handleTabAttached(3, { newWindowId: 2, newPosition: 0 });
+
+    expect(mockChrome.tabs.query).toHaveBeenCalledWith({ windowId: 2 });
+    expect(mockChrome.tabs.remove).not.toHaveBeenCalled();
   });
 });

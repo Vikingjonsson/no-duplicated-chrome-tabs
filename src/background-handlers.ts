@@ -66,6 +66,20 @@ export const handleTabCreated = (tab: chrome.tabs.Tab): Promise<void> => {
   return Promise.resolve();
 };
 
+export const handleTabAttached = async (
+  tabId: number,
+  attachInfo: chrome.tabs.TabAttachInfo
+): Promise<void> => {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab.url) {
+      await handleTab(tab.url, tabId, attachInfo.newWindowId);
+    }
+  } catch {
+    // Tab may have been closed
+  }
+};
+
 export const handleTabUpdated = async (
   tabId: number,
   changeInfo: chrome.tabs.TabChangeInfo
