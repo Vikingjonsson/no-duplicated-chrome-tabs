@@ -33,9 +33,12 @@ const findDuplicateTab = async (
   }
 };
 
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 const focusAndRemove = async (
   existingTab: chrome.tabs.Tab,
-  duplicateTabId: number
+  duplicateTabId: number,
+  retries = 3
 ): Promise<void> => {
   if (!existingTab.id) return;
 
@@ -46,7 +49,10 @@ const focusAndRemove = async (
     }
     await chrome.tabs.remove(duplicateTabId);
   } catch {
-    // Tab or window may have been closed between query and update
+    if (retries > 0) {
+      await delay(200);
+      return focusAndRemove(existingTab, duplicateTabId, retries - 1);
+    }
   }
 };
 
