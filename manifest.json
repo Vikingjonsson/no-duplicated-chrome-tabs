@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "No Duplicate Tabs",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Automatically prevents duplicate tabs by focusing existing tabs with the same URL instead of creating new ones.",
   "author": "Viking Jonsson",
   "homepage_url": "https://github.com/Vikingjonsson/no-duplicated-chrome-tabs",
