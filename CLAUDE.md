@@ -24,7 +24,9 @@ A Chrome Extension (Manifest V3) that prevents duplicate tabs by focusing existi
 
 All source lives in `src/`. The entry point is `src/background.ts`, which registers Chrome event listeners. The actual handler logic is in `src/background-handlers.ts` — this separation exists so handlers can be imported and tested independently without triggering listener registration.
 
-Key behavior flow: `handleTabCreated` / `handleTabUpdated` → `handleTab` → `findDuplicateTab` → `focusAndRemove`. URLs are normalized (hash removed, trailing slash stripped) and system URLs (chrome://, chrome-extension://, about:blank) are ignored.
+Key behavior flow: `handleTabCreated` / `handleTabUpdated` / `handleTabAttached` → `handleTab` → `findDuplicateTab` → `focusAndRemove`. URLs are normalized (hash removed, trailing slash stripped) and system URLs (chrome://, chrome-extension://, about:blank) are ignored.
+
+Duplicate detection is scoped per window — the same URL can be open in different Chrome windows. When a tab is dragged between windows, `onAttached` triggers duplicate detection in the target window. Chrome blocks tab edits during drag operations, so `focusAndRemove` retries up to 3 times with a 200ms delay.
 
 Tests are co-located (`src/background.test.ts`) and mock the `chrome` global API.
 
