@@ -1,101 +1,111 @@
-const IGNORED_URLS = ['chrome://', 'chrome-extension://', 'about:blank'];
+const IGNORED_URL_PREFIXES = ['chrome://', 'chrome-extension://', 'about:blank'];
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 200;
 
-const isIgnoredUrl = (url: string): boolean => {
-  return IGNORED_URLS.some((ignored) => url.startsWith(ignored));
+const isSystemUrl = (url: string): boolean => {
+  return IGNORED_URL_PREFIXES.some((prefix) => url.startsWith(prefix));
 };
 
 const normalizeUrl = (url: string): string => {
   try {
-    const urlObj = new URL(url);
-    urlObj.hash = '';
-    return urlObj.toString().replace(/\/$/, '');
+    const parsedUrl = new URL(url);
+    parsedUrl.hash = '';
+    return parsedUrl.toString().replace(/\/$/, '');
   } catch {
     return url;
   }
 };
 
-const findDuplicateTab = async (
+const findDuplicateTabInWindow = async (
   targetUrl: string,
   excludeTabId: number,
   windowId: number
 ): Promise<chrome.tabs.Tab | null> => {
-  const normalizedTarget = normalizeUrl(targetUrl);
+  const normalizedTargetUrl = normalizeUrl(targetUrl);
 
   try {
-    const tabs = await chrome.tabs.query({ windowId });
-    return (
-      tabs.find(
-        (tab) => tab.id !== excludeTabId && tab.url && normalizeUrl(tab.url) === normalizedTarget
-      ) || null
+    const tabsInWindow = await chrome.tabs.query({ windowId });
+    const matchingTab = tabsInWindow.find(
+      (tab) => tab.id !== excludeTabId && tab.url && normalizeUrl(tab.url) === normalizedTargetUrl
     );
+    return matchingTab || null;
   } catch {
     return null;
   }
 };
 
-const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+const wait = (milliseconds: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-const focusAndRemove = async (
+const activateTab = async (tabId: number, windowId?: number): Promise<void> => {
+  await chrome.tabs.update(tabId, { active: true });
+  if (windowId) {
+    await chrome.windows.update(windowId, { focused: true });
+  }
+};
+
+const focusExistingAndRemoveDuplicate = async (
   existingTab: chrome.tabs.Tab,
   duplicateTabId: number,
-  retries = 3
+  remainingRetries = MAX_RETRY_ATTEMPTS
 ): Promise<void> => {
   if (!existingTab.id) return;
 
   try {
-    await chrome.tabs.update(existingTab.id, { active: true });
-    if (existingTab.windowId) {
-      await chrome.windows.update(existingTab.windowId, { focused: true });
-    }
+    await activateTab(existingTab.id, existingTab.windowId);
     await chrome.tabs.remove(duplicateTabId);
   } catch {
-    if (retries > 0) {
-      await delay(200);
-      return focusAndRemove(existingTab, duplicateTabId, retries - 1);
+    if (remainingRetries > 0) {
+      await wait(RETRY_DELAY_MS);
+      return focusExistingAndRemoveDuplicate(existingTab, duplicateTabId, remainingRetries - 1);
     }
   }
 };
 
-const handleTab = async (url: string, tabId: number, windowId: number): Promise<void> => {
-  if (isIgnoredUrl(url)) return;
+const detectAndRemoveDuplicate = async (
+  url: string,
+  tabId: number,
+  windowId: number
+): Promise<void> => {
+  if (isSystemUrl(url)) return;
 
-  const duplicate = await findDuplicateTab(url, tabId, windowId);
-  if (duplicate) {
-    await focusAndRemove(duplicate, tabId);
+  const duplicateTab = await findDuplicateTabInWindow(url, tabId, windowId);
+  if (duplicateTab) {
+    await focusExistingAndRemoveDuplicate(duplicateTab, tabId);
   }
 };
 
 export const handleTabCreated = (tab: chrome.tabs.Tab): Promise<void> => {
   if (tab.url && tab.id && tab.windowId) {
-    return handleTab(tab.url, tab.id, tab.windowId);
+    return detectAndRemoveDuplicate(tab.url, tab.id, tab.windowId);
   }
   return Promise.resolve();
 };
 
 export const handleTabAttached = async (
   tabId: number,
-  attachInfo: chrome.tabs.TabAttachInfo
+  attachInfo: chrome.tabs.OnAttachedInfo
 ): Promise<void> => {
   try {
     const tab = await chrome.tabs.get(tabId);
     if (tab.url) {
-      await handleTab(tab.url, tabId, attachInfo.newWindowId);
+      await detectAndRemoveDuplicate(tab.url, tabId, attachInfo.newWindowId);
     }
   } catch {
-    // Tab may have been closed
+    // Tab may have been closed before we could read it
   }
 };
 
 export const handleTabUpdated = async (
   tabId: number,
-  changeInfo: chrome.tabs.TabChangeInfo
+  changeInfo: chrome.tabs.OnUpdatedInfo
 ): Promise<void> => {
   if (changeInfo.url && changeInfo.status === 'loading') {
     try {
       const tab = await chrome.tabs.get(tabId);
-      return handleTab(changeInfo.url, tabId, tab.windowId);
+      return detectAndRemoveDuplicate(changeInfo.url, tabId, tab.windowId);
     } catch {
-      // Tab may have been closed
+      // Tab may have been closed before we could read it
     }
   }
 };
