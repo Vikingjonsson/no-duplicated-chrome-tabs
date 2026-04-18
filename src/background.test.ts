@@ -20,6 +20,10 @@ const mockChrome = {
 import { handleTabAttached, handleTabCreated, handleTabUpdated } from './background-handlers';
 
 describe('Chrome Extension - No Duplicate Tabs', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should handle duplicate tab when new tab is created in same window', async () => {
     const existingTab = { id: 1, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
     const newTab = { id: 2, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
@@ -58,7 +62,7 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
 
   it('should handle URL updates during loading', async () => {
     const existingTab = { id: 1, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
-    const updatedTab = { id: 2, windowId: 1 } as chrome.tabs.Tab;
+    const updatedTab = { id: 2, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
 
     mockChrome.tabs.get.mockResolvedValue(updatedTab);
     mockChrome.tabs.query.mockResolvedValue([existingTab]);
@@ -110,6 +114,38 @@ describe('Chrome Extension - No Duplicate Tabs', () => {
     expect(mockChrome.tabs.query).toHaveBeenCalledWith({ windowId: 1 });
     expect(mockChrome.tabs.update).toHaveBeenCalledWith(1, { active: true });
     expect(mockChrome.tabs.remove).toHaveBeenCalledWith(3);
+  });
+
+  it('should not remove duplicate when new tab is in split view', async () => {
+    const existingTab = { id: 1, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
+    const newTab = {
+      id: 2,
+      url: 'https://example.com',
+      windowId: 1,
+      splitViewId: 1,
+    } as chrome.tabs.Tab;
+
+    mockChrome.tabs.query.mockResolvedValue([existingTab]);
+
+    await handleTabCreated(newTab);
+
+    expect(mockChrome.tabs.remove).not.toHaveBeenCalled();
+  });
+
+  it('should not remove duplicate when existing tab is in split view', async () => {
+    const existingTab = {
+      id: 1,
+      url: 'https://example.com',
+      windowId: 1,
+      splitViewId: 1,
+    } as chrome.tabs.Tab;
+    const newTab = { id: 2, url: 'https://example.com', windowId: 1 } as chrome.tabs.Tab;
+
+    mockChrome.tabs.query.mockResolvedValue([existingTab]);
+
+    await handleTabCreated(newTab);
+
+    expect(mockChrome.tabs.remove).not.toHaveBeenCalled();
   });
 
   it('should keep tab when moved to a window without same URL', async () => {
