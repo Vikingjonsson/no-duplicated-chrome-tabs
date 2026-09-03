@@ -4,8 +4,8 @@
   "description": "Chrome extension to prevent duplicate tabs by focusing existing tabs",
   "main": "dist/background.js",
   "scripts": {
-    "build": "TS_NODE_PROJECT=tsconfig.node.json webpack --config webpack.dev.config.ts && cp manifest.json dist/",
-    "build:prod": "TS_NODE_PROJECT=tsconfig.node.json webpack --config webpack.config.ts && cp manifest.json dist/ && cp -r icons dist/ 2>/dev/null || true",
+    "build": "TS_NODE_PROJECT=tsconfig.node.json webpack --config webpack.dev.config.ts",
+    "build:prod": "TS_NODE_PROJECT=tsconfig.node.json webpack --config webpack.config.ts",
     "build:watch": "TS_NODE_PROJECT=tsconfig.node.json webpack --config webpack.dev.config.ts --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -18,6 +18,7 @@
     "validate": "npm run type-check && npm run lint && npm run test:ci",
     "clean": "rm -rf dist extension.zip",
     "prepack": "npm run clean && npm run build:prod",
+    "prepare": "husky",
     "zip": "npm run build:prod && cd dist && zip -r ../extension.zip ."
   },
   "keywords": [
@@ -56,11 +57,5 @@
     "*.{json,md}": [
       "prettier --write"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "pre-push": "npm run validate"
-    }
   }
 }

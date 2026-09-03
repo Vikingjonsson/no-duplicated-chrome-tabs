@@ -4,11 +4,12 @@ A TypeScript Chrome extension that automatically prevents duplicate tabs by focu
 
 ## Features
 
-- Automatically detects when a duplicate tab is being created
+- Automatically detects when a duplicate tab is being created or navigating (supporting `pendingUrl`)
 - Focuses the existing tab and removes the duplicate
-- Handles cross-window tab focusing
-- Ignores system URLs (chrome://, chrome-extension://, about:blank)
-- Normalizes URLs by removing hash fragments and trailing slashes
+- Scopes duplicate detection per window (allows the same URL in separate windows, with deduplication when tabs are dragged/attached between windows)
+- Ignores tabs in Chrome Split View
+- Ignores system and internal URLs (`chrome://`, `chrome-extension://`, `edge://`, `devtools://`, `about:`, `view-source:`, etc.)
+- Normalizes URLs by removing hash fragments and normalizing trailing slashes (including URLs with query parameters)
 
 ## Installation
 

@@ -18,7 +18,8 @@
     "rootDir": "./src",
     "types": [
       "chrome",
-      "jest"
+      "jest",
+      "node"
     ],
     "lib": [
       "ES2022",
@@ -34,7 +35,6 @@
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.test.ts"
+    "dist"
   ]
 }

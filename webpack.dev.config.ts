@@ -1,5 +1,24 @@
+import fs from 'fs';
 import path from 'path';
-import { Configuration } from 'webpack';
+import { Compiler, Configuration } from 'webpack';
+
+class CopyExtensionAssetsPlugin {
+  apply(compiler: Compiler): void {
+    compiler.hooks.afterEmit.tap('CopyExtensionAssetsPlugin', () => {
+      const dist = path.resolve(__dirname, 'dist');
+      const manifestSrc = path.resolve(__dirname, 'manifest.json');
+      const manifestDest = path.join(dist, 'manifest.json');
+      if (fs.existsSync(manifestSrc)) {
+        fs.copyFileSync(manifestSrc, manifestDest);
+      }
+      const iconsSrc = path.resolve(__dirname, 'icons');
+      const iconsDest = path.join(dist, 'icons');
+      if (fs.existsSync(iconsSrc)) {
+        fs.cpSync(iconsSrc, iconsDest, { recursive: true });
+      }
+    });
+  }
+}
 
 const config: Configuration = {
   mode: 'development',
@@ -21,6 +40,7 @@ const config: Configuration = {
       },
     ],
   },
+  plugins: [new CopyExtensionAssetsPlugin()],
   target: 'webworker',
   devtool: 'source-map',
 };

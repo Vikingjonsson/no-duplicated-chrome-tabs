@@ -11,7 +11,8 @@
       "Bash(npx tsc:*)",
       "Bash(git rm:*)",
       "Bash(git push:*)",
-      "Bash(npm version:*)"
+      "Bash(npm version:*)",
+      "WebFetch(domain:developer.chrome.com)"
     ]
   }
 }
