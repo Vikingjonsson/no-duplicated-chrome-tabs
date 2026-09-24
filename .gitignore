@@ -4,4 +4,5 @@ extension.zip
 coverage
 *.log
 .DS_Store
-.claude
+.agents/*.local.*
+.claude/
