@@ -69,6 +69,15 @@ src/
   - `.husky/pre-push`: runs `npm run validate`
 - **Testing**: Tests in `src/background.test.ts` mock `chrome` globally. Tests run in a `node` environment (avoid DOM-only APIs as the extension runs in a service worker).
 
+## CI & Automated Deployment
+
+- **Continuous Integration**: `.github/workflows/test.yaml` runs on push and pull requests to `main` (type check, ESLint, Jest tests, and production build).
+- **Chrome Web Store Release**: `.github/workflows/release.yaml` runs on `v*` tag pushes or manual `workflow_dispatch`.
+  - Runs `npm run validate` and `npm run zip`.
+  - Uploads `extension.zip` and submits for review to Chrome Web Store via `mnao305/chrome-extension-upload@v7.0.0`.
+  - Requires secrets: `CHROME_EXTENSION_ID`, `CHROME_PUBLISHER_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`.
+  - Automatically generates GitHub Release with attached `extension.zip`.
+
 ## Guidelines for AI Agents
 
 - Always run `npm run validate` before completing tasks to verify type-checking, linting, and unit tests pass.

@@ -55,3 +55,25 @@ dist/                          # Build output (generated)
 ├── background.js
 ├── manifest.json
 ```
+
+## Chrome Web Store Automated Publishing
+
+Automated deployment is configured via GitHub Actions in [`.github/workflows/release.yaml`](.github/workflows/release.yaml).
+
+### Triggering a Release
+
+- **Tag Push**: Pushing a version tag (e.g. `git tag v1.1.2 && git push origin v1.1.2`) builds the extension, runs tests, creates a GitHub Release with `extension.zip`, and automatically uploads and submits the package for review to the Chrome Web Store.
+- **Manual Dispatch**: Go to **Actions** > **Release & Publish to Chrome Web Store** > **Run workflow**. You can select whether to submit for review immediately or upload as a draft.
+
+### Required GitHub Repository Secrets
+
+Configure these under **Settings** > **Secrets and variables** > **Actions**:
+
+| Secret Name | Description |
+| :--- | :--- |
+| `CHROME_EXTENSION_ID` | Extension ID from the Chrome Web Store Developer Dashboard |
+| `CHROME_PUBLISHER_ID` | Publisher ID found under Developer Account settings |
+| `CHROME_CLIENT_ID` | Google Cloud OAuth 2.0 Client ID |
+| `CHROME_CLIENT_SECRET` | Google Cloud OAuth 2.0 Client Secret |
+| `CHROME_REFRESH_TOKEN` | OAuth 2.0 Refresh Token with Chrome Web Store API access |
+
